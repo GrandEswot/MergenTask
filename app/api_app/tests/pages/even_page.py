@@ -1,30 +1,31 @@
-import pytest
-import selenium
 import requests
 
 
 class EvenPage:
-    def __init__(self, browser):
-        self.browser = browser
+    def __init__(self):
         self.link = 'http://127.0.0.1:8000/even'
 
     def get_status_code(self):
-        result = self.browser.get(self.link)
-
+        result = requests.get(self.link)
         assert 200 == result.status_code, 'status code should be OK 200'
 
-    @pytest.mark.parametrize('params',
-                             [
-                                 pytest.param([1, 2, 3], marks=pytest.mark.xfail),
-                                 pytest.param(0, marks=pytest.mark.xfail),
-                                 pytest.param([], marks=pytest.mark.xfail),
-                                 [2],
-                                 pytest.param('строка', marks=pytest.mark.xfail),
-                                 [-2, -4, 6]
-                             ]
-                             )
-    def check_method_get_values(self, params):
-        result = requests.get(self.link, params=params)
+    def check_method_get(self, parameters):
+        result = requests.get(self.link, params=parameters)
+        assertion_result = result.json()['result']
+        assert assertion_result == True
 
-        assert result == True
+    def check_method_post(self, parameters):
+        result = requests.post(self.link, params=parameters)
+        print(result.json()['result'])
+        assert all([i % 2 == 0 for i in result.json()['result']]) == True
 
+
+class OddPage(EvenPage):
+    def __init__(self):
+        super().__init__()
+        self.link = 'http://127.0.0.1:8000/odd'
+
+    def check_method_post(self, parameters):
+        result = requests.post(self.link, params=parameters)
+        print(result.json()['result'])
+        assert all([i % 2 != 0 for i in result.json()['result']]) == True
